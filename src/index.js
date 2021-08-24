@@ -3,7 +3,7 @@
 import { vertexShader, fragmentShader } from './shaders.js'
 import { compileShader, createProgram } from './webgl.js'
 import { octahedron, objToPos, objToCol } from './obj.js'
-import { degToRad } from './Math.js'
+import { degToRad } from './math.js'
 import { perspective, yRotation, translate, lookAt, inverse, multiply, xRotation, transformVector } from './m4.js'
 
 let gl = c.getContext('webgl2')
