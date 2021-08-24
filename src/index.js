@@ -2,9 +2,11 @@
 
 import { vertexShader, fragmentShader } from './shaders.js'
 import { compileShader, createProgram } from './webgl.js'
-import { octahedron, objToPos, objToCol } from './obj.js'
+import { objToPos, objToCol } from './obj.js'
 import { degToRad } from './math.js'
 import { perspective, yRotation, translate, lookAt, inverse, multiply, xRotation, transformVector } from './m4.js'
+
+import { obj, objStrToArr, xMirror } from './ship.js'
 
 let gl = c.getContext('webgl2')
 let vs = compileShader(gl, vertexShader, gl.VERTEX_SHADER)
@@ -19,20 +21,28 @@ let vao = gl.createVertexArray()
 gl.bindVertexArray(vao)
 gl.enableVertexAttribArray(aPosition)
 
+let geometry = objStrToArr(obj)
+
 let positionBuffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-setGeometry(gl, octahedron)
+setGeometry(gl, geometry)
 gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0)
 
 let colorBuffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
-setColors(gl, octahedron)
+setColors(gl, geometry)
 gl.enableVertexAttribArray(aColor)
 gl.vertexAttribPointer(aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0)
 
-function setGeometry (gl, obj) {
+function setGeometry (gl, obj, yr = 45) {
+  let obj2 = xMirror(obj)
+  obj.v = obj.v.concat(obj2.v)
+  obj.f = obj.f.concat(obj2.f)
+
   let positions = objToPos(obj)
-  var matrix = xRotation(Math.PI)
+
+  var matrix = xRotation(degToRad(30))
+  matrix = multiply(matrix, yRotation(degToRad(yr)))
   matrix = translate(matrix, 0, 0, 0)
 
   for (var ii = 0; ii < positions.length; ii += 3) {
@@ -42,7 +52,7 @@ function setGeometry (gl, obj) {
     positions[ii + 2] = vector[2]
   }
 
-  let scale = 10
+  let scale = 5
   for (var i in positions) {
     positions[i] *= scale
   }
@@ -55,10 +65,15 @@ function setColors (gl, obj) {
 }
 
 var fieldOfViewRadians = degToRad(60)
-var cameraAngleRadians = degToRad(0)
+var cameraAngleRadians = degToRad(30)
 
 var rotationSpeed = 1.2
 var then = 0
+let anim = 1
+
+window.addEventListener('keypress', function () {
+  anim = !anim
+})
 
 requestAnimationFrame(drawScene)
 
@@ -67,10 +82,12 @@ function drawScene (now) {
   var deltaTime = now - then
   then = now
 
-  cameraAngleRadians += rotationSpeed * deltaTime
+  if (anim) {
+    cameraAngleRadians += rotationSpeed * deltaTime
+  }
 
-  var numFs = 20
-  var radius = 200
+  var numFs = 15
+  var radius = 250
 
   resizeCanvasToDisplaySize()
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
@@ -110,7 +127,7 @@ function drawScene (now) {
     var matrix = translate(viewProjectionMatrix, x, 0, z)
 
     gl.uniformMatrix4fv(uMatrix, false, matrix)
-    gl.drawArrays(gl.TRIANGLES, 0, 8 * 3)
+    gl.drawArrays(gl.TRIANGLES, 0, geometry.f.length)
   }
 
   requestAnimationFrame(drawScene)

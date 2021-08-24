@@ -16,18 +16,19 @@ export const octahedron = {
     1, 5, 3,
     1, 3, 4,
     1, 4, 2
-  ],
-  c: [
-    0, 0, 0,
-    255, 0, 0,
-    0, 255, 0,
-    0, 0, 255,
-    255, 255, 0,
-    0, 255, 255,
-    255, 0, 255,
-    255, 255, 255
   ]
 }
+
+let colors = [
+  0, 0, 0,
+  255, 0, 0,
+  0, 255, 0,
+  0, 0, 255,
+  255, 255, 0,
+  0, 255, 255,
+  255, 0, 255,
+  255, 255, 255
+]
 
 export function objToPos (geom) {
   let s = geom.f.length
@@ -49,9 +50,9 @@ export function objToCol (geom) {
 
   for (let i = 0; i < s; i++) {
     let ci = Math.floor(i / 3)
-    col[i * 3] = geom.c[ci]
-    col[i * 3 + 1] = geom.c[ci + 1]
-    col[i * 3 + 2] = geom.c[ci + 2]
+    col[i * 3] = colors[ci]
+    col[i * 3 + 1] = colors[ci + 1]
+    col[i * 3 + 2] = colors[ci + 2]
   }
 
   return col
