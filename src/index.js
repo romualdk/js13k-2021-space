@@ -4,7 +4,7 @@ import { vertexShader, fragmentShader } from './shaders.js'
 import { compileShader, createProgram } from './webgl.js'
 import { objToPos, objToCol } from './obj.js'
 import { degToRad } from './math.js'
-import { perspective, yRotation, translate, lookAt, inverse, multiply, xRotation, transformVector } from './m4.js'
+import { perspective, yRotation, translate, lookAt, inverse, multiply, xRotation, zRotation, transformVector } from './m4.js'
 
 import { obj, objStrToArr, xMirror } from './ship.js'
 
@@ -41,8 +41,8 @@ function setGeometry (gl, obj, yr = 45) {
 
   let positions = objToPos(obj)
 
-  var matrix = xRotation(degToRad(30))
-  matrix = multiply(matrix, yRotation(degToRad(yr)))
+  var matrix = xRotation(0)
+  matrix = multiply(matrix, yRotation(0))
   matrix = translate(matrix, 0, 0, 0)
 
   for (var ii = 0; ii < positions.length; ii += 3) {
@@ -71,6 +71,16 @@ var rotationSpeed = 1.2
 var then = 0
 let anim = 1
 
+let numFs = 15
+
+let shipAngleRadians = []
+let shipRotationSpeed = []
+
+for (var i = 0; i < numFs; i++) {
+  shipAngleRadians[i] = 0
+  shipRotationSpeed[i] = 2 + Math.random() * 10
+}
+
 window.addEventListener('keypress', function () {
   anim = !anim
 })
@@ -86,8 +96,7 @@ function drawScene (now) {
     cameraAngleRadians += rotationSpeed * deltaTime
   }
 
-  var numFs = 15
-  var radius = 250
+  var radius = 200
 
   resizeCanvasToDisplaySize()
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
@@ -120,11 +129,17 @@ function drawScene (now) {
   var viewProjectionMatrix = multiply(projectionMatrix, viewMatrix)
 
   for (var ii = 0; ii < numFs; ++ii) {
+    shipAngleRadians[ii] += shipRotationSpeed[ii] * deltaTime
+
+    var shipMatrix = zRotation(shipAngleRadians[ii])
+
     var angle = ii * Math.PI * 2 / numFs
 
     var x = Math.cos(angle) * radius
     var z = Math.sin(angle) * radius
+
     var matrix = translate(viewProjectionMatrix, x, 0, z)
+    matrix = multiply(matrix, shipMatrix)
 
     gl.uniformMatrix4fv(uMatrix, false, matrix)
     gl.drawArrays(gl.TRIANGLES, 0, geometry.f.length)
