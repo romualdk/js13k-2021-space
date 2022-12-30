@@ -4,9 +4,9 @@ import { vertexShader, fragmentShader } from './shaders.js'
 import { compileShader, createProgram } from './webgl.js'
 import { objToPos, objToCol } from './obj.js'
 import { degToRad } from './math.js'
-import { perspective, yRotation, translate, lookAt, inverse, multiply, xRotation, zRotation, transformVector } from './m4.js'
+import { perspective, yRotation, translate, lookAt, inverse, multiply, zRotation } from './mat4.js'
 
-import { obj, objStrToArr, xMirror } from './ship.js'
+import { ships, objStrToArr, xMirror } from './ship.js'
 
 let gl = c.getContext('webgl2')
 let vs = compileShader(gl, vertexShader, gl.VERTEX_SHADER)
@@ -21,6 +21,8 @@ let vao = gl.createVertexArray()
 gl.bindVertexArray(vao)
 gl.enableVertexAttribArray(aPosition)
 
+let obj = ships[3]
+
 let geometry = objStrToArr(obj)
 
 let positionBuffer = gl.createBuffer()
@@ -34,28 +36,31 @@ setColors(gl, geometry)
 gl.enableVertexAttribArray(aColor)
 gl.vertexAttribPointer(aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0)
 
-function setGeometry (gl, obj, yr = 45) {
+function getPositions (obj, scale = 1) {
   let obj2 = xMirror(obj)
   obj.v = obj.v.concat(obj2.v)
   obj.f = obj.f.concat(obj2.f)
 
   let positions = objToPos(obj)
 
-  var matrix = xRotation(0)
-  matrix = multiply(matrix, yRotation(0))
-  matrix = translate(matrix, 0, 0, 0)
-
+  /*
   for (var ii = 0; ii < positions.length; ii += 3) {
     var vector = transformVector(matrix, [positions[ii + 0], positions[ii + 1], positions[ii + 2], 1])
     positions[ii + 0] = vector[0]
     positions[ii + 1] = vector[1]
     positions[ii + 2] = vector[2]
   }
+  */
 
-  let scale = 5
   for (var i in positions) {
     positions[i] *= scale
   }
+
+  return positions
+}
+
+function setGeometry (gl, obj) {
+  let positions = getPositions(obj, 3)
 
   gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 }
@@ -71,14 +76,14 @@ var rotationSpeed = 1.2
 var then = 0
 let anim = 1
 
-let numFs = 15
+let numFs = 10
 
 let shipAngleRadians = []
 let shipRotationSpeed = []
 
 for (var i = 0; i < numFs; i++) {
   shipAngleRadians[i] = 0
-  shipRotationSpeed[i] = 2 + Math.random() * 10
+  shipRotationSpeed[i] = (2 + Math.random() * 10) / 10
 }
 
 window.addEventListener('keypress', function () {
